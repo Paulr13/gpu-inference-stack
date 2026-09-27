@@ -1,0 +1,32 @@
+# llama-server systemd unit — generic template.
+# Install:
+#   sudo useradd -r -s /usr/sbin/nologin llama
+#   sudo cp templates/llama-server.service /etc/systemd/system/
+#   sudo systemctl edit llama-server      # override Environment= lines per box
+#   sudo systemctl enable --now llama-server
+[Unit]
+Description=llama.cpp OpenAI-compatible server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=llama
+Group=llama
+Environment=LLAMA_BIN=/opt/llama/bin/llama-server
+Environment=LLAMA_MODEL=/opt/llama/models/model.gguf
+Environment=LLAMA_PORT=8080
+Environment=LLAMA_CTX=32768
+ExecStart=${LLAMA_BIN} --model ${LLAMA_MODEL} --host 127.0.0.1 --port ${LLAMA_PORT} --ctx-size ${LLAMA_CTX} -fa on
+Restart=on-failure
+RestartSec=5
+
+# hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/llama
+
+[Install]
+WantedBy=multi-user.target
